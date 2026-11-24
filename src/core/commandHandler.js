@@ -167,8 +167,16 @@ export class MessageHandler {
       }
 
       try {
+        // Wrapper que fuerza la cita del mensaje original en todas las respuestas
+        const quotedSock = {
+          ...sock,
+          sendMessage: (jid, content, options = {}) => {
+            return sock.sendMessage(jid, content, { quoted: msg, ...options });
+          },
+        };
+
         await command.execute({
-          sock,
+          sock: quotedSock,
           msg,
           remoteJid,
           sender,

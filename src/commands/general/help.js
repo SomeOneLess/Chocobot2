@@ -7,7 +7,7 @@ export default {
   description: 'Comandos generales, economía y multimedia',
   react: 'ℹ️',
   async execute({ sock, remoteJid, commands, prefix }) {
-    const allowed = ['general', 'economy', 'media', 'ai'];
+    const allowed = ['general', 'economy', 'media', 'ai', 'juegos'];
     const unique = new Map();
     for (const cmd of commands.values()) {
       if (!unique.has(cmd.name) && allowed.includes(cmd.category)) {
