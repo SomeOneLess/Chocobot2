@@ -1,0 +1,40 @@
+export default {
+  name: 'penetrar',
+  aliases: ['penetrate'],
+  category: 'nsfw',
+  description: 'Interacción: penetrar',
+  react: '🔞',
+  reactSuccess: '🔞',
+  async execute({ sock, remoteJid, sender, mentions, quoted, args }) {
+    let target = mentions?.[0];
+    if (!target && quoted?.participant) target = quoted.participant;
+    if (!target && args?.[0]) {
+      const num = args[0].replace(/\D/g, '');
+      if (num.length >= 8) target = num + '@s.whatsapp.net';
+    }
+    if (!target) {
+      await sock.sendMessage(remoteJid, { text: 'Menciona o cita a alguien.' });
+      return;
+    }
+    const clean = (j) => j.split(':')[0].split('@')[0];
+    const phrases = [
+    'penetró a',
+    'se la metió a',
+    'penetró profundamente a',
+    'entró dentro de',
+    'penetró con fuerza a',
+    'se la metió hasta el fondo a',
+    'penetró con deseo a',
+    'entró con pasión en',
+    'penetró salvajemente a',
+    'se la metió a',
+    'penetró intensamente a',
+    'entró dentro de',
+    ];
+    const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+    await sock.sendMessage(remoteJid, {
+      text: `🔞 @${clean(sender)} ${phrase} @${clean(target)}`,
+      mentions: [sender, target],
+    });
+  },
+};

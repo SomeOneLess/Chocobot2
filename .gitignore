@@ -1,0 +1,10 @@
+node_modules/
+auth/
+data/
+temp/
+logs/
+.env
+*.log
+*.db
+*.db-shm
+*.db-wal

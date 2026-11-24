@@ -1,0 +1,40 @@
+export default {
+  name: 'morder',
+  aliases: ['bite'],
+  category: 'roleplay',
+  description: 'Interacción: morder',
+  react: '👄',
+  reactSuccess: '👄',
+  async execute({ sock, remoteJid, sender, mentions, quoted, args }) {
+    let target = mentions?.[0];
+    if (!target && quoted?.participant) target = quoted.participant;
+    if (!target && args?.[0]) {
+      const num = args[0].replace(/\D/g, '');
+      if (num.length >= 8) target = num + '@s.whatsapp.net';
+    }
+    if (!target) {
+      await sock.sendMessage(remoteJid, { text: 'Menciona o cita a alguien.' });
+      return;
+    }
+    const clean = (j) => j.split(':')[0].split('@')[0];
+    const phrases = [
+    'mordió juguetonamente a',
+    'le dio un mordisco a',
+    'mordió suavemente a',
+    'le dio una mordida a',
+    'mordió el cuello de',
+    'le dio un mordisco juguetón a',
+    'mordió con cariño a',
+    'le dio una mordidita a',
+    'mordió la oreja de',
+    'le dio un mordisco suave a',
+    'mordió juguetonamente el brazo de',
+    'le dio una mordida tierna a',
+    ];
+    const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+    await sock.sendMessage(remoteJid, {
+      text: `👄 @${clean(sender)} ${phrase} @${clean(target)}`,
+      mentions: [sender, target],
+    });
+  },
+};
