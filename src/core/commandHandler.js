@@ -148,11 +148,6 @@ export class MessageHandler {
       const command = this.commands.get(name.toLowerCase());
       if (!command) continue;
 
-      // Whitelist: solo procesar si el chat está activado (excepto whitelist)
-      if (!['whitelist', 'wl'].includes(name.toLowerCase())) {
-        if (!isWhitelisted(remoteJid)) continue;
-      }
-
       if (this.isDuplicate(msg)) {
         logger.debug(`Comando duplicado omitido: ${name}`);
         continue;
