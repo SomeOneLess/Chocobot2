@@ -4,23 +4,29 @@ export default {
   category: 'admin',
   description: 'Elimina el mensaje citado',
   react: '🗑️',
-  async execute({ sock, remoteJid, quoted, msg }) {
-    if (!quoted?.key && !quoted?.stanzaId) {
+  async execute({ sock, remoteJid, quoted }) {
+    if (!quoted) {
       await sock.sendMessage(remoteJid, { text: 'Cita el mensaje que quieres eliminar.' });
       return;
     }
 
-    const key = quoted.key || {
+    // Construir key válida para Baileys
+    const key = {
       remoteJid,
-      id: quoted.stanzaId,
-      fromMe: false,
-      participant: quoted.participant,
+      id: quoted.stanzaId || quoted.key?.id,
+      fromMe: quoted.key?.fromMe || false,
+      participant: quoted.participant || quoted.key?.participant,
     };
+
+    if (!key.id) {
+      await sock.sendMessage(remoteJid, { text: 'No se pudo obtener el ID del mensaje citado.' });
+      return;
+    }
 
     try {
       await sock.sendMessage(remoteJid, { delete: key });
     } catch (err) {
-      await sock.sendMessage(remoteJid, { text: 'No se pudo eliminar. El bot debe ser admin o el mensaje debe ser reciente.' });
+      await sock.sendMessage(remoteJid, { text: 'No se pudo eliminar. Verifica que el bot sea admin y el mensaje sea reciente.' });
     }
   },
 };
