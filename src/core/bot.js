@@ -6,6 +6,7 @@ import path from 'path';
 import config from '../config/index.js';
 import logger from '../utils/logger.js';
 import { MessageHandler } from './commandHandler.js';
+import { storeMessage } from '../commands/general/undel.js';
 
 const usePairingCode = process.argv.includes('--code') || process.env.USE_PAIRING_CODE === 'true';
 
@@ -73,7 +74,15 @@ export class Bot {
       }
 
       this.sock.ev.on('connection.update', (update) => this.handleConnection(update));
-      this.sock.ev.on('messages.upsert', (m) => this.handler.handleMessages(this.sock, m));
+      this.sock.ev.on('messages.upsert', (m) => {
+        // Guardar mensajes para undel
+        if (m.messages) {
+          for (const msg of m.messages) {
+            if (msg.message && !msg.key.fromMe) storeMessage(msg);
+          }
+        }
+        this.handler.handleMessages(this.sock, m);
+      });
       this.sock.ev.on('messages.update', (updates) => this.handleMessagesUpdate(updates));
       this.sock.ev.on('group-participants.update', (update) => this.handleGroupParticipants(update));
 

@@ -1,7 +1,7 @@
 export default {
   name: 'getpp',
   aliases: ['perfil', 'pfp', 'avatar'],
-  category: 'general',
+  category: 'media',
   description: 'Obtiene la foto de perfil del citado o etiquetado',
   react: '🖼️',
   async execute({ sock, remoteJid, mentions, quoted, sender }) {

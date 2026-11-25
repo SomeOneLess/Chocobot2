@@ -1,8 +1,8 @@
 export default {
   name: 'youtube',
   aliases: ['yt'],
-  category: 'general',
-  description: 'Busca un video de YouTube y envía un enlace aleatorio',
+  category: 'media',
+  description: 'Busca un video de YouTube y envía enlace + miniatura',
   react: '▶️',
   async execute({ sock, remoteJid, args, quoted }) {
     let query = args.join(' ').trim();
@@ -24,7 +24,13 @@ export default {
         return;
       }
       const id = unique[Math.floor(Math.random() * unique.length)];
-      await sock.sendMessage(remoteJid, { text: `▶️ https://youtu.be/${id}` });
+      const thumb = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+      const link = `https://youtu.be/${id}`;
+
+      await sock.sendMessage(remoteJid, {
+        image: { url: thumb },
+        caption: `▶️ ${link}`,
+      });
     } catch {
       await sock.sendMessage(remoteJid, { text: 'Error al buscar en YouTube.' });
     }
