@@ -1,3 +1,4 @@
+import { chargeInteraction } from '../../services/economy/history.js';
 export default {
   name: 'someter',
   aliases: ['submit'],
@@ -6,6 +7,11 @@ export default {
   react: '⛓️',
   reactSuccess: '⛓️',
   async execute({ sock, remoteJid, sender, mentions, quoted, args }) {
+    const charge = chargeInteraction(sender, 100, this.name || 'nsfw');
+    if (!charge.ok) {
+      await sock.sendMessage(remoteJid, { text: `Necesitas $100. Tienes $${charge.wallet}.` });
+      return;
+    }
     let target = mentions?.[0];
     if (!target && quoted?.participant) target = quoted.participant;
     if (!target && args?.[0]) {
