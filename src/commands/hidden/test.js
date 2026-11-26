@@ -1,7 +1,7 @@
 /**
  * Comandos ocultos de prueba.
  * Solo documentados en README.
- * Whitelist en data/testers.json (se crea automáticamente)
+ * Whitelist en data/testers.json
  */
 import { getUser, updateUser } from '../../services/database/users.js';
 import { saveEconomyFile } from '../../services/database/economyFile.js';
@@ -16,7 +16,7 @@ function ensureTestersFile() {
   const dir = path.dirname(TESTERS_FILE);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   if (!fs.existsSync(TESTERS_FILE)) {
-    fs.writeFileSync(TESTERS_FILE, JSON.stringify(['5491176788788'], null, 2));
+    fs.writeFileSync(TESTERS_FILE, '[]');
   }
 }
 
@@ -24,18 +24,24 @@ function normalize(jid) {
   return String(jid || '').split(':')[0].split('@')[0].replace(/\D/g, '');
 }
 
-function isTester(jid) {
+function isTester(jid, isFromMe = false) {
+  // El propio bot siempre puede usar los trucos
+  if (isFromMe) return true;
+
   ensureTestersFile();
   const clean = normalize(jid);
   if (!clean) return false;
 
-  // Owner en config
   const owner = normalize(config.owner?.number || '');
-  if (owner && clean === owner) return true;
+  if (owner && clean.endsWith(owner)) return true;
 
   try {
     const list = JSON.parse(fs.readFileSync(TESTERS_FILE, 'utf-8'));
-    return Array.isArray(list) && list.some(n => normalize(n) === clean);
+    if (!Array.isArray(list)) return false;
+    return list.some(n => {
+      const num = normalize(n);
+      return num && (clean === num || clean.endsWith(num) || num.endsWith(clean));
+    });
   } catch {
     return false;
   }
@@ -56,8 +62,8 @@ export default [
     name: 'addmoney',
     category: 'hidden',
     description: 'Añade $10000 (oculto)',
-    async execute({ sock, remoteJid, sender, mentions, quoted, args }) {
-      if (!isTester(sender)) {
+    async execute({ sock, remoteJid, sender, isFromMe, mentions, quoted, args }) {
+      if (!isTester(sender, isFromMe)) {
         await sock.sendMessage(remoteJid, { text: '🚫' });
         return;
       }
@@ -72,8 +78,8 @@ export default [
     name: 'addpremium',
     category: 'hidden',
     description: 'Añade 1 día de premium (oculto)',
-    async execute({ sock, remoteJid, sender, mentions, quoted, args }) {
-      if (!isTester(sender)) {
+    async execute({ sock, remoteJid, sender, isFromMe, mentions, quoted, args }) {
+      if (!isTester(sender, isFromMe)) {
         await sock.sendMessage(remoteJid, { text: '🚫' });
         return;
       }
@@ -86,8 +92,8 @@ export default [
     name: 'resetcd',
     category: 'hidden',
     description: 'Resetea cooldowns (oculto)',
-    async execute({ sock, remoteJid, sender, mentions, quoted, args }) {
-      if (!isTester(sender)) {
+    async execute({ sock, remoteJid, sender, isFromMe, mentions, quoted, args }) {
+      if (!isTester(sender, isFromMe)) {
         await sock.sendMessage(remoteJid, { text: '🚫' });
         return;
       }
@@ -100,8 +106,8 @@ export default [
     name: 'clearwarns',
     category: 'hidden',
     description: 'Limpia warns (oculto)',
-    async execute({ sock, remoteJid, sender, mentions, quoted, args }) {
-      if (!isTester(sender)) {
+    async execute({ sock, remoteJid, sender, isFromMe, mentions, quoted, args }) {
+      if (!isTester(sender, isFromMe)) {
         await sock.sendMessage(remoteJid, { text: '🚫' });
         return;
       }

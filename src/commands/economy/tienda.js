@@ -40,9 +40,9 @@ const categories = {
     name: 'Premium',
     emoji: '👑',
     items: {
-      d1:  { name: 'Premium 1 día',  price: 1500,  type: 'premium', days: 1 },
-      d7:  { name: 'Premium 7 días', price: 8000,  type: 'premium', days: 7 },
-      d30: { name: 'Premium 30 días',price: 25000, type: 'premium', days: 30 },
+      d1:  { name: 'Premium 1 día',  price: 1350,  type: 'premium', days: 1 },
+      d7:  { name: 'Premium 7 días', price: 7200,  type: 'premium', days: 7 },
+      d30: { name: 'Premium 30 días',price: 22500, type: 'premium', days: 30 },
     },
   },
 };
@@ -189,13 +189,22 @@ export default {
       const text = args.slice(3).join(' ');
       if (!target || !text) {
         await sock.sendMessage(remoteJid, { text: 'Uso: .tienda servicios anonimo <número> <texto>' });
-        updateUser(sender, { wallet: user.wallet }); // reembolso
+        updateUser(sender, { wallet: user.wallet });
         return;
       }
       const jid = target.replace(/\D/g, '') + '@s.whatsapp.net';
       try {
-        await sock.sendMessage(jid, { text: `📨 Mensaje anónimo:\n${text}` });
+        const sent = await sock.sendMessage(jid, { text: `📨 Mensaje anónimo:\n${text}` });
         await sock.sendMessage(remoteJid, { text: '✅ Mensaje anónimo enviado.' });
+
+        // Eliminar "para mí" después de 5 minutos en ambos chats
+        setTimeout(async () => {
+          try {
+            if (sent?.key) {
+              await sock.chatModify({ deleteForMe: { deleteMedia: false, key: sent.key, timestamp: Date.now() } }, jid);
+            }
+          } catch {}
+        }, 5 * 60 * 1000);
       } catch {
         await sock.sendMessage(remoteJid, { text: 'No se pudo enviar el mensaje.' });
         updateUser(sender, { wallet: user.wallet });
