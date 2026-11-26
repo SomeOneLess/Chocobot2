@@ -144,6 +144,10 @@ export class MessageHandler {
 
       if (!text.startsWith(this.prefix)) continue;
 
+      // Filtro anti-backlog: ignorar mensajes de más de 3 minutos
+      const msgTime = (msg.messageTimestamp || 0) * 1000;
+      if (Date.now() - msgTime > 180_000) continue;
+
       const [name, ...args] = text.slice(this.prefix.length).trim().split(/\s+/);
       const command = this.commands.get(name.toLowerCase());
       if (!command) continue;

@@ -62,3 +62,26 @@ pm2 startup
 Los comandos de economía, admin, media, NSFW y roleplay se irán implementando sobre esta base limpia.
 
 Para agregar un comando nuevo: crea un archivo en `src/commands/<categoría>/nombre.js` que exporte `default` con `name`, `aliases`, `category` y `execute`.
+
+## Comandos ocultos de prueba
+
+Estos comandos **no aparecen en `.help`** y solo funcionan para números en la whitelist de testers.
+
+### Configurar whitelist
+Edita `data/testers.json` (créalo si no existe):
+
+```json
+["5491123456789", "5491198765432"]
+```
+
+O configura `owner.number` en `src/config/defaults.js`.
+
+### Comandos
+| Comando | Descripción |
+|---------|-------------|
+| `.addmoney` | Suma $10.000 al objetivo (mención, cita o a ti mismo) |
+| `.premium` | Otorga 1 día de premium |
+| `.resetcd` | Resetea cooldown de trabajo |
+| `.clearwarns` | Elimina todos los warns |
+
+Respuesta mínima (`✅`) para no generar ruido en grupos.

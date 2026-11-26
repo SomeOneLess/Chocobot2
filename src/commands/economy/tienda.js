@@ -1,5 +1,6 @@
 import { getUser, updateUser } from '../../services/database/users.js';
 import { saveEconomyFile } from '../../services/database/economyFile.js';
+import { addHistory } from '../../services/economy/history.js';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import fs from 'fs';
@@ -9,16 +10,21 @@ import config from '../../config/index.js';
 const execAsync = promisify(exec);
 
 const categories = {
-  stickers: {
-    name: 'Stickers',
-    emoji: '🖼️',
+  cajas: {
+    name: 'Cajas de stickers',
+    emoji: '📦',
     items: {
-      hug:   { name: 'Abrazo',    price: 800,  action: 'hug' },
-      kiss:  { name: 'Beso',      price: 1000, action: 'kiss' },
-      pat:   { name: 'Caricia',   price: 700,  action: 'pat' },
-      cuddle:{ name: 'Acurrucar', price: 900,  action: 'cuddle' },
-      slap:  { name: 'Cachetada', price: 850,  action: 'slap' },
-      nsfw:  { name: 'NSFW',      price: 2500, action: 'waifu', nsfw: true },
+      caja: { name: 'Caja de stickers', price: 1200, type: 'caja' },
+    },
+  },
+  servicios: {
+    name: 'Servicios',
+    emoji: '🛠️',
+    items: {
+      resetwork: { name: 'Reset cooldown trabajo', price: 100, type: 'resetwork' },
+      anonimo:   { name: 'Mensaje anónimo',       price: 800, type: 'anonimo' },
+      unwarn:    { name: 'Quitar 1 warn',         price: 5000, type: 'unwarn' },
+      marco:     { name: 'Marco foto de perfil',  price: 600, type: 'marco' },
     },
   },
   sonidos: {
@@ -28,16 +34,14 @@ const categories = {
       airhorn: { name: 'Airhorn', price: 300, sound: 'airhorn' },
       bruh:    { name: 'Bruh',    price: 250, sound: 'bruh' },
       wow:     { name: 'Wow',     price: 200, sound: 'wow' },
-      oof:     { name: 'Oof',     price: 200, sound: 'oof' },
-      yeet:    { name: 'Yeet',    price: 350, sound: 'yeet' },
     },
   },
   boosts: {
     name: 'Mejoras',
     emoji: '⭐',
     items: {
-      xp:   { name: '+50 XP',          price: 500,  type: 'xp',   amount: 50 },
-      bank: { name: 'Banco +1000',     price: 1500, type: 'bank', amount: 1000 },
+      xp:   { name: '+50 XP',      price: 500,  type: 'xp',   amount: 50 },
+      bank: { name: 'Banco +1000', price: 1500, type: 'bank', amount: 1000 },
     },
   },
 };
@@ -46,19 +50,31 @@ const soundUrls = {
   airhorn: 'https://www.myinstants.com/media/sounds/mlg-airhorn.mp3',
   bruh:    'https://www.myinstants.com/media/sounds/bruh.mp3',
   wow:     'https://www.myinstants.com/media/sounds/anime-wow-sound-effect.mp3',
-  oof:     'https://www.myinstants.com/media/sounds/roblox-death-sound_1.mp3',
-  yeet:    'https://www.myinstants.com/media/sounds/yeet.mp3',
 };
 
-async function gifToSticker(gifBuffer) {
-  const id = Date.now();
-  const tempDir = config.paths.temp;
-  if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
-  const input = path.join(tempDir, `gif_${id}`);
-  const output = path.join(tempDir, `stk_${id}.webp`);
-  fs.writeFileSync(input, gifBuffer);
+// Stickers de fallback (favoritos / genéricos)
+const fallbackStickers = [
+  'https://api.waifu.pics/sfw/hug',
+  'https://api.waifu.pics/sfw/kiss',
+  'https://api.waifu.pics/sfw/pat',
+  'https://api.waifu.pics/sfw/cuddle',
+];
+
+async function gifToSticker(url) {
   try {
-    await execAsync(`ffmpeg -i "${input}" -vf "scale=512:512:force_original_aspect_ratio=decrease,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=0x00000000" -c:v libwebp -quality 70 -loop 0 -an -vsync 0 "${output}" -y`);
+    const res = await fetch(url);
+    const data = await res.json();
+    const gifUrl = data.url;
+    if (!gifUrl) return null;
+    const gifRes = await fetch(gifUrl);
+    const gifBuffer = Buffer.from(await gifRes.arrayBuffer());
+    const id = Date.now();
+    const tempDir = config.paths.temp;
+    if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
+    const input = path.join(tempDir, `g_${id}`);
+    const output = path.join(tempDir, `s_${id}.webp`);
+    fs.writeFileSync(input, gifBuffer);
+    await execAsync(`ffmpeg -i "${input}" -vf "scale=512:512:force_original_aspect_ratio=decrease,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=0x00000000" -c:v libwebp -quality 70 -loop 0 -an "${output}" -y`);
     if (fs.existsSync(output)) {
       const sticker = fs.readFileSync(output);
       fs.unlinkSync(input);
@@ -66,22 +82,7 @@ async function gifToSticker(gifBuffer) {
       return sticker;
     }
   } catch {}
-  try { fs.unlinkSync(input); } catch {}
-  try { fs.unlinkSync(output); } catch {}
   return null;
-}
-
-async function getGif(action) {
-  try {
-    const map = { hug: 'hug', kiss: 'kiss', pat: 'pat', cuddle: 'cuddle', slap: 'slap', waifu: 'waifu' };
-    const cat = map[action] || 'hug';
-    const endpoint = action === 'waifu' ? `https://api.waifu.pics/nsfw/${cat}` : `https://api.waifu.pics/sfw/${cat}`;
-    const res = await fetch(endpoint);
-    const data = await res.json();
-    return data.url || null;
-  } catch {
-    return null;
-  }
 }
 
 export default {
@@ -94,7 +95,6 @@ export default {
     const catKey = (args[0] || '').toLowerCase();
     const itemKey = (args[1] || '').toLowerCase();
 
-    // Lista de categorías
     if (!catKey || catKey === 'lista') {
       let text = '*🛒 Tienda*\n\n';
       for (const [key, cat] of Object.entries(categories)) {
@@ -103,6 +103,8 @@ export default {
       text += '\n*Precios de interacciones*\n';
       text += '• Roleplay SFW: $10\n';
       text += '• NSFW: $100\n';
+      text += '• .voz: $20\n';
+      text += '• .ia: $50\n';
       text += '\nUso: .tienda <categoría> [item]';
       await sock.sendMessage(remoteJid, { text });
       return;
@@ -114,7 +116,6 @@ export default {
       return;
     }
 
-    // Lista de items de la categoría
     if (!itemKey) {
       let text = `*${category.emoji} ${category.name}*\n\n`;
       for (const [key, item] of Object.entries(category.items)) {
@@ -137,25 +138,74 @@ export default {
       return;
     }
 
+    // Validaciones especiales antes de cobrar
+    if (item.type === 'marco') {
+      try {
+        await sock.profilePictureUrl(sender, 'image');
+      } catch {
+        await sock.sendMessage(remoteJid, { text: 'No se pudo obtener tu foto de perfil.' });
+        return;
+      }
+    }
+
     updateUser(sender, { wallet: user.wallet - item.price });
     saveEconomyFile();
+    addHistory(sender, 'tienda', -item.price, item.name);
 
-    // Stickers
-    if (item.action) {
-      const url = await getGif(item.action);
-      if (url) {
-        try {
-          const res = await fetch(url);
-          const gifBuffer = Buffer.from(await res.arrayBuffer());
-          const sticker = await gifToSticker(gifBuffer);
-          if (sticker) {
-            await sock.sendMessage(remoteJid, { sticker });
-            await sock.sendMessage(remoteJid, { text: `🖼️ Compraste *${item.name}*` });
-            return;
-          }
-        } catch {}
+    // Caja de stickers
+    if (item.type === 'caja') {
+      const count = 3;
+      let sent = 0;
+      for (let i = 0; i < count; i++) {
+        const url = fallbackStickers[Math.floor(Math.random() * fallbackStickers.length)];
+        const sticker = await gifToSticker(url);
+        if (sticker) {
+          await sock.sendMessage(remoteJid, { sticker });
+          sent++;
+        }
       }
-      await sock.sendMessage(remoteJid, { text: `Compraste *${item.name}* pero no se pudo generar el sticker.` });
+      await sock.sendMessage(remoteJid, { text: `📦 Caja abierta. Stickers enviados: ${sent}` });
+      return;
+    }
+
+    // Reset work
+    if (item.type === 'resetwork') {
+      updateUser(sender, { last_work: 0 });
+      await sock.sendMessage(remoteJid, { text: '⏱️ Cooldown de trabajo reiniciado.' });
+      return;
+    }
+
+    // Mensaje anónimo
+    if (item.type === 'anonimo') {
+      const target = args[2];
+      const text = args.slice(3).join(' ');
+      if (!target || !text) {
+        await sock.sendMessage(remoteJid, { text: 'Uso: .tienda servicios anonimo <número> <texto>' });
+        updateUser(sender, { wallet: user.wallet }); // reembolso
+        return;
+      }
+      const jid = target.replace(/\D/g, '') + '@s.whatsapp.net';
+      try {
+        await sock.sendMessage(jid, { text: `📨 Mensaje anónimo:\n${text}` });
+        await sock.sendMessage(remoteJid, { text: '✅ Mensaje anónimo enviado.' });
+      } catch {
+        await sock.sendMessage(remoteJid, { text: 'No se pudo enviar el mensaje.' });
+        updateUser(sender, { wallet: user.wallet });
+      }
+      return;
+    }
+
+    // Quitar warn
+    if (item.type === 'unwarn') {
+      const newWarns = Math.max(0, (user.warns || 0) - 1);
+      updateUser(sender, { warns: newWarns });
+      await sock.sendMessage(remoteJid, { text: `✅ Warn quitado. Ahora tienes ${newWarns}.` });
+      return;
+    }
+
+    // Marco (simplificado: solo confirma por ahora)
+    if (item.type === 'marco') {
+      await sock.sendMessage(remoteJid, { text: '🖼️ Marco aplicado (función de edición en desarrollo). Foto de perfil verificada.' });
       return;
     }
 
@@ -169,19 +219,17 @@ export default {
           const id = Date.now();
           const tempDir = config.paths.temp;
           if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
-          const mp3Path = path.join(tempDir, `snd_${id}.mp3`);
-          const oggPath = path.join(tempDir, `snd_${id}.ogg`);
+          const mp3Path = path.join(tempDir, `s_${id}.mp3`);
+          const oggPath = path.join(tempDir, `s_${id}.ogg`);
           fs.writeFileSync(mp3Path, mp3);
           await execAsync(`ffmpeg -i "${mp3Path}" -c:a libopus -b:a 64k "${oggPath}" -y`);
           const audio = fs.readFileSync(oggPath);
           await sock.sendMessage(remoteJid, { audio, mimetype: 'audio/ogg; codecs=opus', ptt: true });
           fs.unlinkSync(mp3Path);
           fs.unlinkSync(oggPath);
-          await sock.sendMessage(remoteJid, { text: `🔊 Compraste *${item.name}*` });
-          return;
         } catch {}
       }
-      await sock.sendMessage(remoteJid, { text: `Compraste *${item.name}* pero no se pudo enviar el sonido.` });
+      await sock.sendMessage(remoteJid, { text: `🔊 ${item.name}` });
       return;
     }
 
