@@ -79,9 +79,11 @@ O configura `owner.number` en `src/config/defaults.js`.
 ### Comandos
 | Comando | Descripción |
 |---------|-------------|
-| `.addmoney` | Suma $10.000 al objetivo (mención, cita o a ti mismo) |
-| `.addpremium` | Añade 1 día de premium al objetivo |
+| `.addmoney` | Suma $10.000 al objetivo |
+| `.addpremium` | Añade 1 día de premium |
 | `.resetcd` | Resetea cooldown de trabajo |
 | `.clearwarns` | Elimina todos los warns |
+| `.tester on/off @usuario` | Agrega o quita un tester |
+| `.clearteseters` | Limpia toda la lista de testers |
 
 Respuesta mínima (`✅`) para no generar ruido en grupos.
