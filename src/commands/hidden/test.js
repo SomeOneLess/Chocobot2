@@ -38,7 +38,10 @@ export default [
     category: 'hidden',
     description: 'Añade $10000 (oculto)',
     async execute({ sock, remoteJid, sender, mentions, quoted, args }) {
-      if (!isTester(sender)) return;
+      if (!isTester(sender)) {
+        await sock.sendMessage(remoteJid, { text: '🚫' });
+        return;
+      }
       const target = getTarget(mentions, quoted, args, sender);
       const user = getUser(target);
       updateUser(target, { wallet: (user.wallet || 0) + 10000 });
@@ -47,15 +50,18 @@ export default [
     },
   },
   {
-    name: 'premium',
+    name: 'addpremium',
     category: 'hidden',
-    description: 'Activa premium 1 día (oculto)',
+    description: 'Añade 1 día de premium (oculto)',
     async execute({ sock, remoteJid, sender, mentions, quoted, args }) {
-      if (!isTester(sender)) return;
+      if (!isTester(sender)) {
+        await sock.sendMessage(remoteJid, { text: '🚫' });
+        return;
+      }
       const target = getTarget(mentions, quoted, args, sender);
-      const until = Date.now() + 24 * 60 * 60 * 1000;
-      updateUser(target, { premiumUntil: until });
-      await sock.sendMessage(remoteJid, { text: '✅' });
+      const { addPremiumDays } = await import('../../services/premium/index.js');
+      addPremiumDays(target, 1);
+      await sock.sendMessage(remoteJid, { text: '✅ +1 día premium' });
     },
   },
   {
@@ -63,7 +69,10 @@ export default [
     category: 'hidden',
     description: 'Resetea cooldowns (oculto)',
     async execute({ sock, remoteJid, sender, mentions, quoted, args }) {
-      if (!isTester(sender)) return;
+      if (!isTester(sender)) {
+        await sock.sendMessage(remoteJid, { text: '🚫' });
+        return;
+      }
       const target = getTarget(mentions, quoted, args, sender);
       updateUser(target, { last_work: 0 });
       await sock.sendMessage(remoteJid, { text: '✅' });
@@ -74,7 +83,10 @@ export default [
     category: 'hidden',
     description: 'Limpia warns (oculto)',
     async execute({ sock, remoteJid, sender, mentions, quoted, args }) {
-      if (!isTester(sender)) return;
+      if (!isTester(sender)) {
+        await sock.sendMessage(remoteJid, { text: '🚫' });
+        return;
+      }
       const target = getTarget(mentions, quoted, args, sender);
       updateUser(target, { warns: 0 });
       await sock.sendMessage(remoteJid, { text: '✅' });

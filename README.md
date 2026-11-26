@@ -80,7 +80,7 @@ O configura `owner.number` en `src/config/defaults.js`.
 | Comando | Descripción |
 |---------|-------------|
 | `.addmoney` | Suma $10.000 al objetivo (mención, cita o a ti mismo) |
-| `.premium` | Otorga 1 día de premium |
+| `.addpremium` | Añade 1 día de premium al objetivo |
 | `.resetcd` | Resetea cooldown de trabajo |
 | `.clearwarns` | Elimina todos los warns |
 

@@ -1,6 +1,6 @@
 import { getUser, updateUser } from '../../services/database/users.js';
 import { saveEconomyFile } from '../../services/database/economyFile.js';
-import { addHistory } from '../../services/economy/history.js';
+import { addPremiumDays } from '../../services/premium/index.js';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import fs from 'fs';
@@ -36,12 +36,13 @@ const categories = {
       wow:     { name: 'Wow',     price: 200, sound: 'wow' },
     },
   },
-  boosts: {
-    name: 'Mejoras',
-    emoji: '⭐',
+  premium: {
+    name: 'Premium',
+    emoji: '👑',
     items: {
-      xp:   { name: '+50 XP',      price: 500,  type: 'xp',   amount: 50 },
-      bank: { name: 'Banco +1000', price: 1500, type: 'bank', amount: 1000 },
+      d1:  { name: 'Premium 1 día',  price: 1500,  type: 'premium', days: 1 },
+      d7:  { name: 'Premium 7 días', price: 8000,  type: 'premium', days: 7 },
+      d30: { name: 'Premium 30 días',price: 25000, type: 'premium', days: 30 },
     },
   },
 };
@@ -230,6 +231,14 @@ export default {
         } catch {}
       }
       await sock.sendMessage(remoteJid, { text: `🔊 ${item.name}` });
+      return;
+    }
+
+    // Premium
+    if (item.type === 'premium') {
+      const until = addPremiumDays(sender, item.days);
+      const days = Math.ceil((until - Date.now()) / (24 * 60 * 60 * 1000));
+      await sock.sendMessage(remoteJid, { text: `👑 Premium activado. Expira en ${days} días.` });
       return;
     }
 
