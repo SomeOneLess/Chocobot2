@@ -47,6 +47,12 @@ function migrate() {
       expires_at INTEGER
     );
   `);
+
+  // Migración: premiumUntil
+  try {
+    db.prepare('ALTER TABLE users ADD COLUMN premiumUntil INTEGER DEFAULT 0').run();
+  } catch {}
+
   logger.info('Migraciones de base de datos aplicadas');
 }
 
