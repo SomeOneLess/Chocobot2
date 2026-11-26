@@ -1,22 +1,41 @@
 /**
  * Comandos ocultos de prueba.
  * Solo documentados en README.
- * Whitelist en config.owner.number o en data/testers.json
+ * Whitelist en data/testers.json (se crea automáticamente)
  */
 import { getUser, updateUser } from '../../services/database/users.js';
 import { saveEconomyFile } from '../../services/database/economyFile.js';
+import { addPremiumDays } from '../../services/premium/index.js';
 import fs from 'fs';
 import path from 'path';
 import config from '../../config/index.js';
 
+const TESTERS_FILE = path.join(config.paths.data, 'testers.json');
+
+function ensureTestersFile() {
+  const dir = path.dirname(TESTERS_FILE);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  if (!fs.existsSync(TESTERS_FILE)) {
+    fs.writeFileSync(TESTERS_FILE, JSON.stringify(['5491176788788'], null, 2));
+  }
+}
+
+function normalize(jid) {
+  return String(jid || '').split(':')[0].split('@')[0].replace(/\D/g, '');
+}
+
 function isTester(jid) {
-  const clean = (jid || '').split('@')[0];
-  if (config.owner.number && clean.includes(config.owner.number.replace(/\D/g, ''))) return true;
+  ensureTestersFile();
+  const clean = normalize(jid);
+  if (!clean) return false;
+
+  // Owner en config
+  const owner = normalize(config.owner?.number || '');
+  if (owner && clean === owner) return true;
+
   try {
-    const file = path.join(config.paths.data, 'testers.json');
-    if (!fs.existsSync(file)) return false;
-    const list = JSON.parse(fs.readFileSync(file, 'utf-8'));
-    return list.includes(clean);
+    const list = JSON.parse(fs.readFileSync(TESTERS_FILE, 'utf-8'));
+    return Array.isArray(list) && list.some(n => normalize(n) === clean);
   } catch {
     return false;
   }
@@ -46,7 +65,7 @@ export default [
       const user = getUser(target);
       updateUser(target, { wallet: (user.wallet || 0) + 10000 });
       saveEconomyFile();
-      await sock.sendMessage(remoteJid, { text: '✅' });
+      await sock.sendMessage(remoteJid, { text: '✅ +$10000' });
     },
   },
   {
@@ -59,7 +78,6 @@ export default [
         return;
       }
       const target = getTarget(mentions, quoted, args, sender);
-      const { addPremiumDays } = await import('../../services/premium/index.js');
       addPremiumDays(target, 1);
       await sock.sendMessage(remoteJid, { text: '✅ +1 día premium' });
     },
@@ -75,7 +93,7 @@ export default [
       }
       const target = getTarget(mentions, quoted, args, sender);
       updateUser(target, { last_work: 0 });
-      await sock.sendMessage(remoteJid, { text: '✅' });
+      await sock.sendMessage(remoteJid, { text: '✅ cooldown reseteado' });
     },
   },
   {
@@ -89,7 +107,7 @@ export default [
       }
       const target = getTarget(mentions, quoted, args, sender);
       updateUser(target, { warns: 0 });
-      await sock.sendMessage(remoteJid, { text: '✅' });
+      await sock.sendMessage(remoteJid, { text: '✅ warns limpiados' });
     },
   },
 ];

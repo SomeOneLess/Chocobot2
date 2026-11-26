@@ -21,7 +21,7 @@ const categories = {
     name: 'Servicios',
     emoji: '🛠️',
     items: {
-      resetwork: { name: 'Reset cooldown trabajo', price: 100, type: 'resetwork' },
+      resetwork: { name: 'Reset cooldown trabajo', price: 550, type: 'resetwork' },
       anonimo:   { name: 'Mensaje anónimo',       price: 800, type: 'anonimo' },
       unwarn:    { name: 'Quitar 1 warn',         price: 5000, type: 'unwarn' },
       marco:     { name: 'Marco foto de perfil',  price: 600, type: 'marco' },
@@ -119,6 +119,13 @@ export default {
 
     if (!itemKey) {
       let text = `*${category.emoji} ${category.name}*\n\n`;
+      if (catKey === 'premium') {
+        text += 'Beneficios:\n';
+        text += '• GIFs en interacciones\n';
+        text += '• NSFW al 50%\n';
+        text += '• .voz e .ia gratis\n';
+        text += '• XP x2\n\n';
+      }
       for (const [key, item] of Object.entries(category.items)) {
         text += `• *${key}* — $${item.price} (${item.name})\n`;
       }
@@ -204,9 +211,18 @@ export default {
       return;
     }
 
-    // Marco (simplificado: solo confirma por ahora)
+    // Marco (simplificado por ahora)
     if (item.type === 'marco') {
-      await sock.sendMessage(remoteJid, { text: '🖼️ Marco aplicado (función de edición en desarrollo). Foto de perfil verificada.' });
+      try {
+        const url = await sock.profilePictureUrl(sender, 'image');
+        await sock.sendMessage(remoteJid, {
+          image: { url },
+          caption: '🖼️ Foto de perfil (marco en desarrollo)',
+        });
+      } catch {
+        await sock.sendMessage(remoteJid, { text: 'No se pudo obtener la foto de perfil.' });
+        updateUser(sender, { wallet: user.wallet }); // reembolso
+      }
       return;
     }
 
