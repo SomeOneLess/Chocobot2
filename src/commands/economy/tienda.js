@@ -14,14 +14,13 @@ const categories = {
     name: 'Cajas de stickers',
     emoji: '📦',
     items: {
-      caja: { name: 'Caja de stickers', price: 1200, type: 'caja' },
+      caja: { name: 'Caja de stickers', price: 100, type: 'caja' },
     },
   },
   servicios: {
     name: 'Servicios',
     emoji: '🛠️',
     items: {
-      resetwork: { name: 'Reset cooldown trabajo', price: 550, type: 'resetwork' },
       anonimo:   { name: 'Mensaje anónimo',       price: 800, type: 'anonimo' },
       unwarn:    { name: 'Quitar 1 warn',         price: 5000, type: 'unwarn' },
       marco:     { name: 'Marco foto de perfil',  price: 600, type: 'marco' },

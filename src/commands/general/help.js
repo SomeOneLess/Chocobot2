@@ -23,10 +23,13 @@ export default {
     }
 
     let text = `*Comandos*\n\n`;
+    text += `👑 *Premium* — ${prefix}premium | ${prefix}tienda premium\n\n`;
+
     for (const [cat, cmds] of Object.entries(byCategory)) {
       const catInfo = categories[cat] || { name: cat, emoji: '📁' };
       text += `${catInfo.emoji} *${catInfo.name}*\n`;
       for (const c of cmds.sort((a, b) => a.name.localeCompare(b.name))) {
+        if (c.name === 'premium') continue;
         text += `• ${prefix}${c.name}\n`;
       }
       text += '\n';
