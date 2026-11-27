@@ -63,26 +63,34 @@ const fallbackStickers = [
 
 async function gifToSticker(url) {
   try {
-    const res = await fetch(url);
+    const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    if (!res.ok) return null;
     const data = await res.json();
     const gifUrl = data.url;
     if (!gifUrl) return null;
-    const gifRes = await fetch(gifUrl);
+
+    const gifRes = await fetch(gifUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    if (!gifRes.ok) return null;
     const gifBuffer = Buffer.from(await gifRes.arrayBuffer());
-    const id = Date.now();
+
+    const id = Date.now() + Math.floor(Math.random() * 1000);
     const tempDir = config.paths.temp;
     if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
-    const input = path.join(tempDir, `g_${id}`);
+    const input = path.join(tempDir, `g_${id}.gif`);
     const output = path.join(tempDir, `s_${id}.webp`);
+
     fs.writeFileSync(input, gifBuffer);
-    await execAsync(`ffmpeg -i "${input}" -vf "scale=512:512:force_original_aspect_ratio=decrease,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=0x00000000" -c:v libwebp -quality 70 -loop 0 -an "${output}" -y`);
-    if (fs.existsSync(output)) {
+    await execAsync(`ffmpeg -y -i "${input}" -vf "scale=512:512:force_original_aspect_ratio=decrease,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=0x00000000" -c:v libwebp -quality 60 -loop 0 -an -vsync 0 "${output}"`);
+
+    if (fs.existsSync(output) && fs.statSync(output).size > 100) {
       const sticker = fs.readFileSync(output);
       fs.unlinkSync(input);
       fs.unlinkSync(output);
       return sticker;
     }
-  } catch {}
+  } catch (err) {
+    console.error('gifToSticker error:', err.message);
+  }
   return null;
 }
 
