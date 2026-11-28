@@ -12,17 +12,14 @@ import config from '../../config/index.js';
 
 const execAsync = promisify(exec);
 
-// Items directos del menú principal (sin categoría)
 const directItems = {
   sticker: {
     name: 'Sticker de GIF aleatorio',
     price: 100,
     type: 'sticker',
     emoji: '📦',
-    usage: '.tienda sticker [búsqueda]',
   },
 };
-// Compatibilidad: el flujo viejo `.tienda cajas caja` ahora lleva a `.tienda sticker`
 const legacyAliases = { caja: 'sticker', cajas: 'sticker' };
 
 const categories = {
@@ -30,9 +27,9 @@ const categories = {
     name: 'Servicios',
     emoji: '🛠️',
     items: {
-      anonimo: { name: 'Mensaje anónimo',      price: 800,  type: 'anonimo' },
-      unwarn:  { name: 'Quitar 1 warn',        price: 5000, type: 'unwarn' },
-      marco:   { name: 'Marco foto de perfil', price: 600,  type: 'marco' },
+      anonimo: { name: 'Mensaje anónimo', price: 800, type: 'anonimo' },
+      unwarn:  { name: 'Quitar 1 warn', price: 5000, type: 'unwarn' },
+      marco:   { name: 'Marco foto de perfil', price: 600, type: 'marco' },
     },
   },
   sonidos: {
@@ -40,16 +37,16 @@ const categories = {
     emoji: '🔊',
     items: {
       airhorn: { name: 'Airhorn', price: 300, sound: 'airhorn' },
-      bruh:    { name: 'Bruh',    price: 250, sound: 'bruh' },
-      wow:     { name: 'Wow',     price: 200, sound: 'wow' },
+      bruh:    { name: 'Bruh', price: 250, sound: 'bruh' },
+      wow:     { name: 'Wow', price: 200, sound: 'wow' },
     },
   },
   premium: {
     name: 'Premium',
     emoji: '👑',
     items: {
-      d1:  { name: 'Premium 1 día',   price: 1350,  type: 'premium', days: 1 },
-      d7:  { name: 'Premium 7 días',  price: 7200,  type: 'premium', days: 7 },
+      d1:  { name: 'Premium 1 día', price: 1350, type: 'premium', days: 1 },
+      d7:  { name: 'Premium 7 días', price: 7200, type: 'premium', days: 7 },
       d30: { name: 'Premium 30 días', price: 22500, type: 'premium', days: 30 },
     },
   },
@@ -81,17 +78,13 @@ export default {
         text += `${cat.emoji} *${key}* — ${cat.name}\n`;
       }
       text += '\n*Precios de interacciones*\n';
-      text += '• Roleplay SFW: $10\n';
-      text += '• NSFW: $100\n';
-      text += '• .voz: $20\n';
-      text += '• .ia: $50\n';
-      text += '\nUso: .tienda <categoría> [item]  |  .tienda sticker [búsqueda]';
+      text += '• Roleplay SFW: $10\n• NSFW: $100\n• .voz: $20\n• .ia: $50\n';
+      text += '\nUso: .tienda sticker [búsqueda] | .tienda <categoría>';
       await sock.sendMessage(remoteJid, { text });
       return;
     }
 
-    let item;
-    let extra; // argumentos extra después del item
+    let item, extra;
 
     const direct = directItems[catKey];
     if (direct) {
@@ -109,11 +102,7 @@ export default {
       if (!itemKey) {
         let text = `*${category.emoji} ${category.name}*\n\n`;
         if (catKey === 'premium') {
-          text += 'Beneficios:\n';
-          text += '• GIFs en interacciones\n';
-          text += '• NSFW al 50%\n';
-          text += '• .voz e .ia gratis\n';
-          text += '• XP x2\n\n';
+          text += 'Beneficios:\n• GIFs en interacciones\n• NSFW al 50%\n• .voz e .ia gratis\n• XP x2\n\n';
         }
         for (const [key, it] of Object.entries(category.items)) {
           text += `• *${key}* — $${it.price} (${it.name})\n`;
@@ -137,7 +126,6 @@ export default {
       return;
     }
 
-    // Validaciones especiales antes de cobrar
     if (item.type === 'marco') {
       try {
         await sock.profilePictureUrl(sender, 'image');
@@ -151,7 +139,6 @@ export default {
     saveEconomyFile();
     addHistory(sender, 'tienda', -item.price, item.name);
 
-    // Sticker a partir de un GIF (SFW, ≤10 s, aspecto ~1:1)
     if (item.type === 'sticker') {
       try {
         const query = extra.join(' ').trim();
@@ -160,21 +147,16 @@ export default {
         const sticker = await gifToSticker(gif.buffer, { maxSeconds: config.sticker?.maxDurationSec ?? 10 });
         await sock.sendMessage(remoteJid, { sticker });
         if (gif.ignoredQuery) {
-          await sock.sendMessage(remoteJid, {
-            text: 'ℹ️ La búsqueda por texto necesita GIPHY_API_KEY; se usó un GIF aleatorio.',
-          });
+          await sock.sendMessage(remoteJid, { text: 'ℹ️ La búsqueda por texto necesita GIPHY_API_KEY; se usó un GIF aleatorio.' });
         }
       } catch (err) {
         console.error('tienda/sticker error:', err.message);
         refund(sender, item.price, 'reembolso sticker');
-        await sock.sendMessage(remoteJid, {
-          text: `❌ No se pudo crear el sticker: ${err.message}. Se te devolvieron $${item.price}.`,
-        }).catch(() => {});
+        await sock.sendMessage(remoteJid, { text: `❌ No se pudo crear el sticker: ${err.message}. Se te devolvieron $${item.price}.` }).catch(() => {});
       }
       return;
     }
 
-    // Mensaje anónimo
     if (item.type === 'anonimo') {
       const target = extra[0];
       const text = extra.slice(1).join(' ');
@@ -187,7 +169,6 @@ export default {
       try {
         const sent = await sock.sendMessage(jid, { text: `📨 Mensaje anónimo:\n${text}` });
         await sock.sendMessage(remoteJid, { text: '✅ Mensaje anónimo enviado.' });
-
         setTimeout(async () => {
           try {
             if (sent?.key) {
@@ -202,7 +183,6 @@ export default {
       return;
     }
 
-    // Quitar warn
     if (item.type === 'unwarn') {
       const newWarns = Math.max(0, (user.warns || 0) - 1);
       updateUser(sender, { warns: newWarns });
@@ -210,14 +190,10 @@ export default {
       return;
     }
 
-    // Marco (simplificado por ahora)
     if (item.type === 'marco') {
       try {
         const url = await sock.profilePictureUrl(sender, 'image');
-        await sock.sendMessage(remoteJid, {
-          image: { url },
-          caption: '🖼️ Foto de perfil (marco en desarrollo)',
-        });
+        await sock.sendMessage(remoteJid, { image: { url }, caption: '🖼️ Foto de perfil (marco en desarrollo)' });
       } catch {
         await sock.sendMessage(remoteJid, { text: 'No se pudo obtener la foto de perfil.' });
         updateUser(sender, { wallet: user.wallet });
@@ -225,7 +201,6 @@ export default {
       return;
     }
 
-    // Sonidos
     if (item.sound) {
       const soundUrl = soundUrls[item.sound];
       if (soundUrl) {
@@ -249,7 +224,6 @@ export default {
       return;
     }
 
-    // Premium
     if (item.type === 'premium') {
       const until = addPremiumDays(sender, item.days);
       const days = Math.ceil((until - Date.now()) / (24 * 60 * 60 * 1000));

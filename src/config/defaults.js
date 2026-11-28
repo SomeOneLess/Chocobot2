@@ -48,19 +48,7 @@ export default {
   },
 
   roleplay: {
-    gifProvider: 'none', // 'none' | 'waifu.pics' | 'nekos.best'
-    gifTimeoutMs: 8000,
-    fallbackTextOnly: true,
-  },
-
-  messages: {
-    error: '❌ Ocurrió un error al procesar el comando.',
-    noPermission: '🚫 No tienes permiso para usar este comando.',
-    nsfwDisabled: '🔞 La categoría NSFW está desactivada en este grupo. Un admin debe activarla con `.nsfw on`.',
-  },
-
-  roleplay: {
-    gifProvider: 'nekos.best', // 'none' | 'waifu.pics' | 'nekos.best'  (antes 'none' => nunca había GIFs)
+    gifProvider: 'nekos.best', // 'none' | 'waifu.pics' | 'nekos.best'
     gifTimeoutMs: 8000,
     fallbackTextOnly: true,
   },
@@ -68,5 +56,10 @@ export default {
   sticker: {
     maxDurationSec: 10,
   },
-};
 
+  messages: {
+    error: '❌ Ocurrió un error al procesar el comando.',
+    noPermission: '🚫 No tienes permiso para usar este comando.',
+    nsfwDisabled: '🔞 La categoría NSFW está desactivada en este grupo. Un admin debe activarla con `.nsfw on`.',
+  },
+};

@@ -42,7 +42,12 @@ export function getHistory(jid, limit = 10) {
     .reverse();
 }
 
-export function chargeInteraction(jid, cost, name) {
+export function refund(jid, amount, name = 'reembolso') {
+  const user = getUser(jid);
+  updateUser(jid, { wallet: (user.wallet || 0) + amount });
+  saveEconomyFile();
+  addHistory(jid, 'reembolso', amount, name);
+}
   const user = getUser(jid);
   if ((user.wallet || 0) < cost) {
     return { ok: false, wallet: user.wallet || 0 };
@@ -51,11 +56,4 @@ export function chargeInteraction(jid, cost, name) {
   saveEconomyFile();
   addHistory(jid, 'interaccion', -cost, name);
   return { ok: true, wallet: user.wallet - cost };
-}
-
-export function refund(jid, amount, name = 'reembolso') {
-  const user = getUser(jid);
-  updateUser(jid, { wallet: (user.wallet || 0) + amount });
-  saveEconomyFile();
-  addHistory(jid, 'reembolso', amount, name);
 }

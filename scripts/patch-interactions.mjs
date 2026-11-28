@@ -8,11 +8,12 @@ const targets = [
   { dir: 'src/commands/nsfw', kind: 'nsfw' },
 ];
 
-const callRe = /await sock\.sendMessage\(remoteJid, \{\s*text: (`(?:[^`\\]|\\.)*`),\s*mentions: \[sender, target\],?\s*\}\);/;
+const callRe = /await sock\.sendMessage\(remoteJid, \{\s*text: ((?:[^\\]|\\.)*?),\s*mentions: \[sender, target\],?\s*\}\);/;
 const importLine = "import { sendInteraction } from '../../services/roleplay/interaction.js';";
 
 for (const { dir, kind } of targets) {
   const abs = path.join(root, dir);
+  if (!fs.existsSync(abs)) continue;
   for (const file of fs.readdirSync(abs).filter((f) => f.endsWith('.js'))) {
     const full = path.join(abs, file);
     let src = fs.readFileSync(full, 'utf-8');

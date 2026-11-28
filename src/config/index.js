@@ -11,7 +11,6 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 const envSchema = z.object({
   OWNER_NUMBER: z.string().min(8).optional(),
-  GIPHY_API_KEY: z.string().optional()
   BOT_PREFIX: z.string().min(1).optional(),
   AUTH_DIR: z.string().optional(),
   DATA_DIR: z.string().optional(),
@@ -22,6 +21,7 @@ const envSchema = z.object({
   POLLINATIONS_API_KEY: z.string().optional(),
   PINTEREST_ACCESS_TOKEN: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(),
+  GIPHY_API_KEY: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -51,9 +51,9 @@ const config = {
   nodeEnv: env.NODE_ENV || defaults.nodeEnv,
   apis: {
     pollinations: env.POLLINATIONS_API_KEY || '',
-    giphy: env.GIPHY_API_KEY || 'iSjxbg3v0stHUs1bTwaO1IzzipWyxYLX',
     pinterest: env.PINTEREST_ACCESS_TOKEN || '',
     openai: env.OPENAI_API_KEY || '',
+    giphy: env.GIPHY_API_KEY || '',
   },
 };
 

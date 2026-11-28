@@ -10,7 +10,7 @@ import config from '../../config/index.js';
 const COST = 300;
 const TIMEOUT_MS = 180_000;
 const MAX_MB = config.media?.maxFileSizeMB || 50;
-const COOKIES_FILE = path.join(config.paths.data, 'cookies.txt'); // opcional (YouTube)
+const COOKIES_FILE = path.join(config.paths.data, 'cookies.txt');
 const VIDEO_EXT = new Set(['.mp4', '.mkv', '.webm', '.mov', '.m4v', '.flv', '.avi']);
 
 function detectPlatform(url) {
@@ -32,12 +32,11 @@ function baseArgs() {
   return args;
 }
 
-// Cada estrategia se prueba por separado: si una falla, se intenta la siguiente.
 function buildStrategies(platform) {
   const merge = ['--merge-output-format', 'mp4'];
   const list = [
     { name: 'h264-720', args: ['-S', 'vcodec:h264,res:720,acodec:aac', '-f', 'bv*+ba/b', ...merge] },
-    { name: 'single-file', args: ['-f', 'b/best'] }, // X, Facebook, etc. con un solo archivo
+    { name: 'single-file', args: ['-f', 'b/best'] },
   ];
   if (platform === 'youtube') {
     list.splice(1, 0, {
@@ -94,7 +93,6 @@ async function runStrategy(url, tempDir, id, strategy) {
   return file;
 }
 
-// WhatsApp reproduce bien mp4 + h264. Si no, se recodifica.
 async function ensureWhatsappMp4(file, tempDir, id) {
   const isMp4 = path.extname(file).toLowerCase() === '.mp4';
   const codec = isMp4 ? await probeVideoCodec(file) : null;
@@ -168,7 +166,7 @@ export default {
       console.error('[download] error final:', err.message);
       if (!isPremium) refund(sender, COST, 'reembolso descarga');
       await sock.sendMessage(remoteJid, {
-        text: `❌ No se pudo descargar: ${err.message}.${isPremium ? '' : ` Se te devolvieron $${COST}.`}`,
+        text: `❌ No se pudo descargar: ${err.message}.${isPremium ? '' : ` Se te devolvieron $${COST}`}`,
       }).catch(() => {});
     } finally {
       cleanup(tempDir, id);

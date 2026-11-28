@@ -6,18 +6,18 @@ import logger from '../utils/logger.js';
 import db from '../services/database/index.js';
 import { react, defaultReactions } from '../utils/reactions.js';
 
-const MAX_MESSAGE_AGE_MS = 180_000;   // 3 minutos
-const DEDUP_TTL_MS = 10 * 60_000;     // > ventana de antigüedad
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const MAX_MESSAGE_AGE_MS = 180_000;   // 3 minutos
+const DEDUP_TTL_MS = 10 * 60_000;     // > ventana de antigüedad
+
 export class MessageHandler {
-    constructor() {
+  constructor() {
     this.prefix = config.prefix;
     this.commands = new Map();
     this.processed = new Map();
 
-    // Registro persistente: evita reprocesar tras un reinicio de PM2
     db.exec(`CREATE TABLE IF NOT EXISTS processed_messages (
       key TEXT PRIMARY KEY,
       ts INTEGER NOT NULL
@@ -26,40 +26,6 @@ export class MessageHandler {
     this.cleanupProcessed();
     this.cleanupTimer = setInterval(() => this.cleanupProcessed(), 60_000);
     this.cleanupTimer.unref?.();
-  }
-
-  cleanupProcessed() {
-    const limit = Date.now() - DEDUP_TTL_MS;
-    for (const [k, t] of this.processed) {
-      if (t < limit) this.processed.delete(k);
-    }
-    try {
-      db.prepare('DELETE FROM processed_messages WHERE ts < ?').run(limit);
-    } catch (err) {
-      logger.warn({ err }, 'No se pudo limpiar processed_messages');
-    }
-  }
-
-  isDuplicate(msg) {
-    const key = `${msg.key.remoteJid}:${msg.key.id}`;
-    if (this.processed.has(key)) return true;
-    const now = Date.now();
-    this.processed.set(key, now);
-    try {
-      const r = this.stmtInsertProcessed.run(key, now);
-      if (r.changes === 0) return true; // ya atendido (incluso antes de un reinicio)
-    } catch (err) {
-      logger.warn({ err }, 'No se pudo registrar el mensaje procesado');
-    }
-    return false;
-  }
-
-  getMessageTimeMs(msg) {
-    let ts = msg.messageTimestamp;
-    if (ts && typeof ts === 'object' && typeof ts.toNumber === 'function') ts = ts.toNumber();
-    ts = Number(ts || 0);
-    if (!ts) return 0;
-    return ts > 1e12 ? ts : ts * 1000;
   }
 
   async loadCommands() {
@@ -108,17 +74,38 @@ export class MessageHandler {
     return results;
   }
 
+  cleanupProcessed() {
+    const limit = Date.now() - DEDUP_TTL_MS;
+    for (const [k, t] of this.processed) {
+      if (t < limit) this.processed.delete(k);
+    }
+    try {
+      db.prepare('DELETE FROM processed_messages WHERE ts < ?').run(limit);
+    } catch (err) {
+      logger.warn({ err }, 'No se pudo limpiar processed_messages');
+    }
+  }
+
   isDuplicate(msg) {
     const key = `${msg.key.remoteJid}:${msg.key.id}`;
+    if (this.processed.has(key)) return true;
     const now = Date.now();
-    if (this.processed.has(key) && now - this.processed.get(key) < 60_000) return true;
     this.processed.set(key, now);
-    if (this.processed.size > 5000) {
-      for (const [k, t] of this.processed) {
-        if (now - t > 60_000) this.processed.delete(k);
-      }
+    try {
+      const r = this.stmtInsertProcessed.run(key, now);
+      if (r.changes === 0) return true;
+    } catch (err) {
+      logger.warn({ err }, 'No se pudo registrar el mensaje procesado');
     }
     return false;
+  }
+
+  getMessageTimeMs(msg) {
+    let ts = msg.messageTimestamp;
+    if (ts && typeof ts === 'object' && typeof ts.toNumber === 'function') ts = ts.toNumber();
+    ts = Number(ts || 0);
+    if (!ts) return 0;
+    return ts > 1e12 ? ts : ts * 1000;
   }
 
   extractText(message) {
@@ -176,13 +163,12 @@ export class MessageHandler {
     return null;
   }
 
-    async handleMessages(sock, m) {
+  async handleMessages(sock, m) {
     if (m.type !== 'notify' || !m.messages) return;
 
     for (const msg of m.messages) {
       if (!msg?.message || !msg.key?.remoteJid || msg.key.remoteJid === 'status@broadcast') continue;
 
-      // 1) Antigüedad: lo primero de todo
       const msgTime = this.getMessageTimeMs(msg);
       if (!msgTime || Date.now() - msgTime > MAX_MESSAGE_AGE_MS) continue;
 
@@ -192,22 +178,16 @@ export class MessageHandler {
       const sender = isFromMe ? sock.user.id : (msg.key.participant || remoteJid);
       const text = this.extractText(msg.message);
 
-      // 2) Solo comandos
       if (!text.startsWith(this.prefix)) continue;
 
-      // 3) Duplicados (antes de buscar o ejecutar nada)
       if (this.isDuplicate(msg)) {
         logger.debug(`Mensaje duplicado omitido: ${msg.key.id}`);
         continue;
       }
 
-      // 4) Comando
       const [name, ...args] = text.slice(this.prefix.length).trim().split(/\s+/);
       const command = this.commands.get(name.toLowerCase());
       if (!command) continue;
-
-      // ... (desde "// Reacción inicial" hasta el final, sin cambios)
-
 
       // Reacción inicial
       const reactEmoji = command.react || defaultReactions[name.toLowerCase()] || defaultReactions[command.category] || defaultReactions.default;

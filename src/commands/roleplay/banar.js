@@ -10,7 +10,7 @@ export default {
   async execute({ sock, remoteJid, sender, mentions, quoted, args }) {
     const charge = chargeInteraction(sender, 10, this.name || 'roleplay');
     if (!charge.ok) {
-      await sock.sendMessage(remoteJid, { text: `Necesitas $10. Tienes $${charge.wallet}.` });
+      await sendInteraction({ sock, remoteJid, sender, target, text: `Necesitas $10. Tienes $${charge.wallet}.` });
       return;
     }
     let target = mentions?.[0];
@@ -39,6 +39,7 @@ export default {
     'le preparó un baño especial a',
     ];
     const phrase = phrases[Math.floor(Math.random() * phrases.length)];
-    await sendInteraction({ sock, remoteJid, sender, target, text: `🛁 @${clean(sender)} ${phrase} @${clean(target)}`, command: this.name, kind: 'sfw' });
+    await sock.sendMessage(remoteJid, {
+      text: `🛁 @${clean(sender)} ${phrase} @${clean(target)}`, command: this.name, kind: 'sfw' });
   },
 };

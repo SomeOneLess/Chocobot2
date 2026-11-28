@@ -35,10 +35,9 @@ async function isShortEnough(buffer, maxSec) {
   }
 }
 
-/** Giphy: rating "g" (apto para todo público) + filtro de aspecto cercano a 1:1. */
 async function giphyCandidates(query) {
   const key = config.apis?.giphy;
-  if (!key) return null; // proveedor no disponible
+  if (!key) return null;
   const params = new URLSearchParams({ api_key: key, limit: '50', rating: 'g', lang: 'es' });
   let endpoint = 'trending';
   if (query) {
@@ -61,7 +60,6 @@ async function giphyCandidates(query) {
   return shuffle(list);
 }
 
-/** Fallback sin API key: GIFs SFW de waifu.pics. */
 async function waifuRandomUrl() {
   const cat = FALLBACK_CATEGORIES[rand(FALLBACK_CATEGORIES.length)];
   const data = await fetchJson(`https://api.waifu.pics/sfw/${cat}`);
@@ -69,10 +67,6 @@ async function waifuRandomUrl() {
   return data.url;
 }
 
-/**
- * Devuelve { buffer, source, ignoredQuery }.
- * Lanza Error con un mensaje claro si no se logra obtener un GIF válido.
- */
 export async function fetchStickerGif({ query = '' } = {}) {
   const maxSec = config.sticker?.maxDurationSec ?? 10;
   const errors = [];

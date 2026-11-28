@@ -75,13 +75,14 @@ export class Bot {
 
       this.sock.ev.on('connection.update', (update) => this.handleConnection(update));
       this.sock.ev.on('messages.upsert', (m) => {
-        // Guardar mensajes para undel
         if (m.messages) {
           for (const msg of m.messages) {
             if (msg.message && !msg.key.fromMe) storeMessage(msg);
           }
         }
-        this.handler.handleMessages(this.sock, m);
+        this.handler.handleMessages(this.sock, m).catch((err) => {
+          logger.error({ err }, 'Error no controlado en handleMessages');
+        });
       });
       this.sock.ev.on('messages.update', (updates) => this.handleMessagesUpdate(updates));
       this.sock.ev.on('group-participants.update', (update) => this.handleGroupParticipants(update));
@@ -153,17 +154,4 @@ export class Bot {
     // Welcome se implementará con servicio de grupos
     logger.debug({ id, participants }, 'Nuevos participantes');
   }
-	this.sock.ev.on('messages.upsert', (m) => {
-	  if (m.messages) {
-	    for (const msg of m.messages) {
-	      if (msg.message && !msg.key.fromMe) storeMessage(msg);
-	    }
-	  }
-	  this.handler.handleMessages(this.sock, m).catch((err) => {
-	    logger.error({ err }, 'Error no controlado en handleMessages');
-	  });
-	});
-
 }
-
-

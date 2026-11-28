@@ -41,10 +41,6 @@ const providers = {
   },
 };
 
-/**
- * name: nombre del comando (abrazar, chupar...) o acción directa (hug).
- * kind: 'sfw' | 'nsfw'. Nunca lanza: devuelve null si no hay GIF.
- */
 export async function getGif(name, kind = 'sfw') {
   const configured = config.roleplay?.gifProvider;
   if (!configured || configured === 'none') return null;
@@ -96,6 +92,5 @@ export async function sendRoleplay(sock, remoteJid, text, mentions, gifUrl) {
       }
     }
   } catch {}
-  // Fallback a texto
   await sock.sendMessage(remoteJid, { text, mentions });
 }
