@@ -1,5 +1,6 @@
 import { chargeInteraction } from '../../services/economy/history.js';
 import { sendInteraction } from '../../services/roleplay/interaction.js';
+
 export default {
   name: 'nalgadansfw',
   aliases: ['nalgada'],
@@ -8,11 +9,12 @@ export default {
   react: '🍑',
   reactSuccess: '🍑',
   async execute({ sock, remoteJid, sender, mentions, quoted, args }) {
-    const charge = chargeInteraction(sender, 100, this.name || 'nsfw');
+    const charge = chargeInteraction(sender, 100, 'nalgadansfw');
     if (!charge.ok) {
-      await sendInteraction({ sock, remoteJid, sender, target, text: `Necesitas $100. Tienes $${charge.wallet}.` });
+      await sock.sendMessage(remoteJid, { text: `Necesitas $100. Tienes $${charge.wallet}.` });
       return;
     }
+
     let target = mentions?.[0];
     if (!target && quoted?.participant) target = quoted.participant;
     if (!target && args?.[0]) {
@@ -23,23 +25,25 @@ export default {
       await sock.sendMessage(remoteJid, { text: 'Menciona o cita a alguien.' });
       return;
     }
+
     const clean = (j) => j.split(':')[0].split('@')[0];
     const phrases = [
-    'le dio una nalgada fuerte a',
-    'palmeó con fuerza el culo de',
-    'le propinó una nalgada a',
-    'le dio una palmada en el trasero a',
-    'le dio una nalgada sensual a',
-    'palmeó el culo de',
-    'le dio una nalgada a',
-    'le propinó una palmada fuerte a',
-    'le dio una nalgada con deseo a',
-    'palmeó con ganas a',
-    'le dio una nalgada a',
-    'le propinó una nalgada a',
+    'interactuó con',
+    'le hizo algo a',
+    'se acercó a',
+    'jugó con',
+    'se puso cariñoso/a con',
+    'le dedicó atención a',
+    'compartió un momento con',
+    'se mostró cercano/a con',
+    'le dio cariño a',
+    'se acurrucó con',
+    'le hizo compañía a',
+    'compartió un instante con',
     ];
     const phrase = phrases[Math.floor(Math.random() * phrases.length)];
-    await sock.sendMessage(remoteJid, {
-      text: `🍑 @${clean(sender)} ${phrase} @${clean(target)}`, command: this.name, kind: 'nsfw' });
+    const text = `🍑 @${clean(sender)} ${phrase} @${clean(target)}`;
+
+    await sendInteraction({ sock, remoteJid, sender, target, text, command: 'nalgadansfw', kind: 'nsfw' });
   },
 };

@@ -1,5 +1,6 @@
 import { chargeInteraction } from '../../services/economy/history.js';
 import { sendInteraction } from '../../services/roleplay/interaction.js';
+
 export default {
   name: 'acompanar',
   aliases: ['acompañar'],
@@ -8,11 +9,12 @@ export default {
   react: '🤝',
   reactSuccess: '🤝',
   async execute({ sock, remoteJid, sender, mentions, quoted, args }) {
-    const charge = chargeInteraction(sender, 10, this.name || 'roleplay');
+    const charge = chargeInteraction(sender, 10, 'acompanar');
     if (!charge.ok) {
-      await sendInteraction({ sock, remoteJid, sender, target, text: `Necesitas $10. Tienes $${charge.wallet}.` });
+      await sock.sendMessage(remoteJid, { text: `Necesitas $10. Tienes $${charge.wallet}.` });
       return;
     }
+
     let target = mentions?.[0];
     if (!target && quoted?.participant) target = quoted.participant;
     if (!target && args?.[0]) {
@@ -23,23 +25,25 @@ export default {
       await sock.sendMessage(remoteJid, { text: 'Menciona o cita a alguien.' });
       return;
     }
+
     const clean = (j) => j.split(':')[0].split('@')[0];
     const phrases = [
-    'acompañó a',
-    'se quedó acompañando a',
-    'acompañó en silencio a',
-    'acompañó con apoyo a',
-    'se ofreció a acompañar a',
-    'acompañó en su camino a',
-    'acompañó con cariño a',
-    'se quedó al lado de',
-    'acompañó fielmente a',
-    'acompañó en los buenos y malos momentos a',
-    'acompañó con paciencia a',
-    'se ofreció a hacer compañía a',
+    'interactuó con',
+    'le hizo algo a',
+    'se acercó a',
+    'jugó con',
+    'se puso cariñoso/a con',
+    'le dedicó atención a',
+    'compartió un momento con',
+    'se mostró cercano/a con',
+    'le dio cariño a',
+    'se acurrucó con',
+    'le hizo compañía a',
+    'compartió un instante con',
     ];
     const phrase = phrases[Math.floor(Math.random() * phrases.length)];
-    await sock.sendMessage(remoteJid, {
-      text: `🤝 @${clean(sender)} ${phrase} @${clean(target)}`, command: this.name, kind: 'sfw' });
+    const text = `🤝 @${clean(sender)} ${phrase} @${clean(target)}`;
+
+    await sendInteraction({ sock, remoteJid, sender, target, text, command: 'acompanar', kind: 'sfw' });
   },
 };

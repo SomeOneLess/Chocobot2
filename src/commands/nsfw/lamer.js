@@ -1,5 +1,6 @@
 import { chargeInteraction } from '../../services/economy/history.js';
 import { sendInteraction } from '../../services/roleplay/interaction.js';
+
 export default {
   name: 'lamer',
   aliases: ['lick'],
@@ -8,11 +9,12 @@ export default {
   react: '👅',
   reactSuccess: '👅',
   async execute({ sock, remoteJid, sender, mentions, quoted, args }) {
-    const charge = chargeInteraction(sender, 100, this.name || 'nsfw');
+    const charge = chargeInteraction(sender, 100, 'lamer');
     if (!charge.ok) {
-      await sendInteraction({ sock, remoteJid, sender, target, text: `Necesitas $100. Tienes $${charge.wallet}.` });
+      await sock.sendMessage(remoteJid, { text: `Necesitas $100. Tienes $${charge.wallet}.` });
       return;
     }
+
     let target = mentions?.[0];
     if (!target && quoted?.participant) target = quoted.participant;
     if (!target && args?.[0]) {
@@ -23,23 +25,25 @@ export default {
       await sock.sendMessage(remoteJid, { text: 'Menciona o cita a alguien.' });
       return;
     }
+
     const clean = (j) => j.split(':')[0].split('@')[0];
     const phrases = [
-    'lamió eróticamente a',
-    'le pasó la lengua a',
-    'lamió con deseo a',
-    'le lamió el cuerpo a',
-    'lamió sensualmente a',
-    'le recorrió con la lengua a',
-    'lamió con lujuria a',
-    'le lamió íntimamente a',
-    'lamió apasionadamente a',
-    'le pasó la lengua por el cuerpo a',
-    'lamió con pasión a',
-    'le lamió con ganas a',
+    'interactuó con',
+    'le hizo algo a',
+    'se acercó a',
+    'jugó con',
+    'se puso cariñoso/a con',
+    'le dedicó atención a',
+    'compartió un momento con',
+    'se mostró cercano/a con',
+    'le dio cariño a',
+    'se acurrucó con',
+    'le hizo compañía a',
+    'compartió un instante con',
     ];
     const phrase = phrases[Math.floor(Math.random() * phrases.length)];
-    await sock.sendMessage(remoteJid, {
-      text: `👅 @${clean(sender)} ${phrase} @${clean(target)}`, command: this.name, kind: 'nsfw' });
+    const text = `👅 @${clean(sender)} ${phrase} @${clean(target)}`;
+
+    await sendInteraction({ sock, remoteJid, sender, target, text, command: 'lamer', kind: 'nsfw' });
   },
 };

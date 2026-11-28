@@ -1,5 +1,6 @@
 import { chargeInteraction } from '../../services/economy/history.js';
 import { sendInteraction } from '../../services/roleplay/interaction.js';
+
 export default {
   name: 'provocar',
   aliases: ['tease'],
@@ -8,11 +9,12 @@ export default {
   react: '😏',
   reactSuccess: '😏',
   async execute({ sock, remoteJid, sender, mentions, quoted, args }) {
-    const charge = chargeInteraction(sender, 100, this.name || 'nsfw');
+    const charge = chargeInteraction(sender, 100, 'provocar');
     if (!charge.ok) {
-      await sendInteraction({ sock, remoteJid, sender, target, text: `Necesitas $100. Tienes $${charge.wallet}.` });
+      await sock.sendMessage(remoteJid, { text: `Necesitas $100. Tienes $${charge.wallet}.` });
       return;
     }
+
     let target = mentions?.[0];
     if (!target && quoted?.participant) target = quoted.participant;
     if (!target && args?.[0]) {
@@ -23,23 +25,25 @@ export default {
       await sock.sendMessage(remoteJid, { text: 'Menciona o cita a alguien.' });
       return;
     }
+
     const clean = (j) => j.split(':')[0].split('@')[0];
     const phrases = [
-    'provocó a',
-    'se puso a provocar a',
-    'provocó con su cuerpo a',
-    'le hizo provocaciones a',
-    'provocó sensualmente a',
-    'se insinuó a',
-    'provocó con deseo a',
-    'le provocó con la mirada a',
-    'provocó intensamente a',
-    'se puso a provocar a',
-    'provocó con lujuria a',
-    'le hizo provocaciones a',
+    'interactuó con',
+    'le hizo algo a',
+    'se acercó a',
+    'jugó con',
+    'se puso cariñoso/a con',
+    'le dedicó atención a',
+    'compartió un momento con',
+    'se mostró cercano/a con',
+    'le dio cariño a',
+    'se acurrucó con',
+    'le hizo compañía a',
+    'compartió un instante con',
     ];
     const phrase = phrases[Math.floor(Math.random() * phrases.length)];
-    await sock.sendMessage(remoteJid, {
-      text: `😏 @${clean(sender)} ${phrase} @${clean(target)}`, command: this.name, kind: 'nsfw' });
+    const text = `😏 @${clean(sender)} ${phrase} @${clean(target)}`;
+
+    await sendInteraction({ sock, remoteJid, sender, target, text, command: 'provocar', kind: 'nsfw' });
   },
 };

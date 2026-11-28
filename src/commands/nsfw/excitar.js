@@ -1,5 +1,6 @@
 import { chargeInteraction } from '../../services/economy/history.js';
 import { sendInteraction } from '../../services/roleplay/interaction.js';
+
 export default {
   name: 'excitar',
   aliases: ['arouse'],
@@ -8,11 +9,12 @@ export default {
   react: '🔥',
   reactSuccess: '🔥',
   async execute({ sock, remoteJid, sender, mentions, quoted, args }) {
-    const charge = chargeInteraction(sender, 100, this.name || 'nsfw');
+    const charge = chargeInteraction(sender, 100, 'excitar');
     if (!charge.ok) {
-      await sendInteraction({ sock, remoteJid, sender, target, text: `Necesitas $100. Tienes $${charge.wallet}.` });
+      await sock.sendMessage(remoteJid, { text: `Necesitas $100. Tienes $${charge.wallet}.` });
       return;
     }
+
     let target = mentions?.[0];
     if (!target && quoted?.participant) target = quoted.participant;
     if (!target && args?.[0]) {
@@ -23,23 +25,25 @@ export default {
       await sock.sendMessage(remoteJid, { text: 'Menciona o cita a alguien.' });
       return;
     }
+
     const clean = (j) => j.split(':')[0].split('@')[0];
     const phrases = [
-    'excitó a',
-    'puso caliente a',
-    'excitó con sus caricias a',
-    'le provocó excitación a',
-    'excitó con sus palabras a',
-    'puso a mil a',
-    'excitó con su cuerpo a',
-    'le hizo excitarse a',
-    'excitó intensamente a',
-    'puso muy caliente a',
-    'excitó con deseo a',
-    'le provocó a',
+    'interactuó con',
+    'le hizo algo a',
+    'se acercó a',
+    'jugó con',
+    'se puso cariñoso/a con',
+    'le dedicó atención a',
+    'compartió un momento con',
+    'se mostró cercano/a con',
+    'le dio cariño a',
+    'se acurrucó con',
+    'le hizo compañía a',
+    'compartió un instante con',
     ];
     const phrase = phrases[Math.floor(Math.random() * phrases.length)];
-    await sock.sendMessage(remoteJid, {
-      text: `🔥 @${clean(sender)} ${phrase} @${clean(target)}`, command: this.name, kind: 'nsfw' });
+    const text = `🔥 @${clean(sender)} ${phrase} @${clean(target)}`;
+
+    await sendInteraction({ sock, remoteJid, sender, target, text, command: 'excitar', kind: 'nsfw' });
   },
 };

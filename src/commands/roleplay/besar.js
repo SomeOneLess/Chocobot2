@@ -1,18 +1,20 @@
 import { chargeInteraction } from '../../services/economy/history.js';
 import { sendInteraction } from '../../services/roleplay/interaction.js';
+
 export default {
   name: 'besar',
   aliases: ['kiss'],
   category: 'roleplay',
-  description: 'Besar a alguien',
+  description: 'Interacción: besar',
   react: '💋',
   reactSuccess: '💋',
   async execute({ sock, remoteJid, sender, mentions, quoted, args }) {
-    const charge = chargeInteraction(sender, 10, this.name || 'roleplay');
+    const charge = chargeInteraction(sender, 10, 'besar');
     if (!charge.ok) {
-      await sendInteraction({ sock, remoteJid, sender, target, text: `Necesitas $10. Tienes $${charge.wallet}.` });
+      await sock.sendMessage(remoteJid, { text: `Necesitas $10. Tienes $${charge.wallet}.` });
       return;
     }
+
     let target = mentions?.[0];
     if (!target && quoted?.participant) target = quoted.participant;
     if (!target && args?.[0]) {
@@ -23,15 +25,25 @@ export default {
       await sock.sendMessage(remoteJid, { text: 'Menciona o cita a alguien.' });
       return;
     }
+
     const clean = (j) => j.split(':')[0].split('@')[0];
     const phrases = [
-      'besó suavemente a', 'le dio un beso tierno a', 'besó con pasión a',
-      'le robó un beso a', 'besó contra la pared a', 'le dio un beso en la frente a',
-      'besó apasionadamente a', 'le dio un beso dulce a', 'besó con ternura a',
-      'le dio un beso de película a', 'besó los labios de', 'le dio un beso lento a',
+    'interactuó con',
+    'le hizo algo a',
+    'se acercó a',
+    'jugó con',
+    'se puso cariñoso/a con',
+    'le dedicó atención a',
+    'compartió un momento con',
+    'se mostró cercano/a con',
+    'le dio cariño a',
+    'se acurrucó con',
+    'le hizo compañía a',
+    'compartió un instante con',
     ];
     const phrase = phrases[Math.floor(Math.random() * phrases.length)];
-    await sock.sendMessage(remoteJid, {
-      text: `💋 @${clean(sender)} ${phrase} @${clean(target)}`, command: this.name, kind: 'sfw' });
+    const text = `💋 @${clean(sender)} ${phrase} @${clean(target)}`;
+
+    await sendInteraction({ sock, remoteJid, sender, target, text, command: 'besar', kind: 'sfw' });
   },
 };
