@@ -48,6 +48,8 @@ export function refund(jid, amount, name = 'reembolso') {
   saveEconomyFile();
   addHistory(jid, 'reembolso', amount, name);
 }
+
+export function chargeInteraction(jid, cost, name) {
   const user = getUser(jid);
   if ((user.wallet || 0) < cost) {
     return { ok: false, wallet: user.wallet || 0 };
