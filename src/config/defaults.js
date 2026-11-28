@@ -58,4 +58,15 @@ export default {
     noPermission: '🚫 No tienes permiso para usar este comando.',
     nsfwDisabled: '🔞 La categoría NSFW está desactivada en este grupo. Un admin debe activarla con `.nsfw on`.',
   },
+
+  roleplay: {
+    gifProvider: 'nekos.best', // 'none' | 'waifu.pics' | 'nekos.best'  (antes 'none' => nunca había GIFs)
+    gifTimeoutMs: 8000,
+    fallbackTextOnly: true,
+  },
+
+  sticker: {
+    maxDurationSec: 10,
+  },
 };
+

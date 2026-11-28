@@ -1,4 +1,5 @@
 import { chargeInteraction } from '../../services/economy/history.js';
+import { sendInteraction } from '../../services/roleplay/interaction.js';
 export default {
   name: 'fuck',
   aliases: ['coger','penetrar','follar'],
@@ -38,9 +39,6 @@ export default {
     'penetró salvajemente a',
     ];
     const phrase = phrases[Math.floor(Math.random() * phrases.length)];
-    await sock.sendMessage(remoteJid, {
-      text: `🔞 @${clean(sender)} ${phrase} @${clean(target)}`,
-      mentions: [sender, target],
-    });
+    await sendInteraction({ sock, remoteJid, sender, target, text: `🔞 @${clean(sender)} ${phrase} @${clean(target)}`, command: this.name, kind: 'nsfw' });
   },
 };

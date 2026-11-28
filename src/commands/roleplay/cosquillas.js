@@ -1,4 +1,5 @@
 import { chargeInteraction } from '../../services/economy/history.js';
+import { sendInteraction } from '../../services/roleplay/interaction.js';
 export default {
   name: 'cosquillas',
   aliases: ['tickle'],
@@ -38,9 +39,6 @@ export default {
     'hizo cosquillas juguetonas a',
     ];
     const phrase = phrases[Math.floor(Math.random() * phrases.length)];
-    await sock.sendMessage(remoteJid, {
-      text: `😆 @${clean(sender)} ${phrase} @${clean(target)}`,
-      mentions: [sender, target],
-    });
+    await sendInteraction({ sock, remoteJid, sender, target, text: `😆 @${clean(sender)} ${phrase} @${clean(target)}`, command: this.name, kind: 'sfw' });
   },
 };

@@ -153,4 +153,17 @@ export class Bot {
     // Welcome se implementará con servicio de grupos
     logger.debug({ id, participants }, 'Nuevos participantes');
   }
+	this.sock.ev.on('messages.upsert', (m) => {
+	  if (m.messages) {
+	    for (const msg of m.messages) {
+	      if (msg.message && !msg.key.fromMe) storeMessage(msg);
+	    }
+	  }
+	  this.handler.handleMessages(this.sock, m).catch((err) => {
+	    logger.error({ err }, 'Error no controlado en handleMessages');
+	  });
+	});
+
 }
+
+
